@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>مشغل وتسجيل IPTV | عباس الزبيدي</title>
+<meta name="description" content="مشغل IPTV مع تسجيل البث المباشر والتقاط الصور وجدولة التسجيل — تطوير عباس الزبيدي">
+<meta name="theme-color" content="#0d0f14">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- شاشة البداية -->
+<div id="splash">
+  <div class="splash-scan"></div>
+  <div class="splash-inner">
+    <div class="splash-glow"></div>
+    <img src="icons/icon-192.png" alt="ABBAS TV" class="splash-logo">
+    <h1 class="splash-title">ABBAS&nbsp;TV</h1>
+    <p class="splash-sub">مشغل وتسجيل IPTV</p>
+    <div class="splash-bar"><i></i></div>
+    <small class="splash-copy">جميع الحقوق محفوظة © عباس الزبيدي — 2026</small>
+  </div>
+</div>
+<header>
+  <h1>📺 مشغل وتسجيل IPTV</h1>
+  <p>تشغيل قنوات HLS — تسجيل البث — التقاط الصور — جدولة التسجيل</p>
+  <span class="badge">إصدار 1.0 — جميع الحقوق محفوظة © <b>عباس الزبيدي</b></span>
+</header>
+
+<div class="wrap">
+
+  <!-- ================= TV ================= -->
+  <div class="tv-stage">
+    <div class="tv" id="tvSet">
+      <div class="tv-top">
+        <div class="antenna"><i></i><i></i><i></i><b></b></div>
+        <div class="tv-brand">ABBAS TV</div>
+        <div class="antenna" style="transform:scaleX(-1) rotate(-4deg)"><i></i><i></i><i></i><b></b></div>
+      </div>
+      <div class="screen-bezel">
+        <div class="screen off" id="screenBox">
+          <video id="tvVideo" playsinline></video>
+          <canvas id="staticCanvas"></canvas>
+          <div class="osd">
+            <div class="rec-dot" id="osdRec"><i></i> تسجيل</div>
+            <div class="live-badge" id="osdLive">مباشر</div>
+            <div class="ch-badge" id="osdCh">TV</div>
+          </div>
+          <div class="scanlines"></div>
+          <div class="vignette"></div>
+          <div class="glass"></div>
+        </div>
+      </div>
+      <div class="tv-bottom">
+        <div class="knobs">
+          <div class="knob-col">
+            <div class="knob power" id="powerKnob" title="تشغيل / إطفاء"></div>
+            <span class="knob-label">تشغيل</span>
+          </div>
+        </div>
+        <div class="tv-ch">
+          <button class="tv-btn" id="chPrev">▶| السابق</button>
+          <div class="ch-num" id="chNum">--</div>
+          <button class="tv-btn" id="chNext">|◀ التالي</button>
+        </div>
+        <div class="speaker"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-line" id="statusLine">التلفاز مطفأ — اضغط زر التشغيل</div>
+
+  <!-- ================= CONTROLS ================= -->
+  <div class="controls">
+    <button class="ctl" id="btnPlay">▶ تشغيل / إيقاف</button>
+    <div class="vol-group">
+      <button class="ctl icon" id="volDown">🔉-</button>
+      <input type="range" id="volRange" min="0" max="100" value="80">
+      <button class="ctl icon" id="volUp">🔊+</button>
+      <button class="ctl icon" id="btnMute">🔇</button>
+    </div>
+    <button class="rec-btn" id="btnRec" title="تسجيل (R)"><span>R</span></button>
+    <div class="rec-timer" id="recTimer">00:00</div>
+    <button class="ctl" id="btnShot">📸 التقاط صورة</button>
+    <button class="ctl" id="btnFull">⛶ ملء الشاشة</button>
+  </div>
+
+  <!-- ================= IMPORT ================= -->
+  <div class="panel">
+    <h2>إضافة ملف قنوات M3U</h2>
+    <div class="tabs">
+      <div class="tab active" data-tab="t1">📁 من الجهاز</div>
+      <div class="tab" data-tab="t2">🔗 من رابط</div>
+      <div class="tab" data-tab="t3">📋 لصق نص</div>
+      <div class="tab" data-tab="t4">➕ قناة يدوية</div>
+    </div>
+
+    <div class="tabpane active" id="t1">
+      <div class="file-drop" id="dropZone">
+        <b>اسحب ملف M3U هنا أو اضغط للاختيار</b>
+        يعمل من حاسبة أو هاتف أو تابلت — يدعم .m3u و .m3u8 و .txt
+        <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt,audio/x-mpegurl,application/x-mpegURL" style="display:none">
+      </div>
+    </div>
+
+    <div class="tabpane" id="t2">
+      <div class="row">
+        <div class="field" style="flex:3">
+          <label>رابط ملف M3U (يفضل أن يدعم CORS)</label>
+          <input type="url" id="m3uUrl" placeholder="https://example.com/channels.m3u">
+        </div>
+        <div class="field" style="justify-content:flex-end">
+          <label>&nbsp;</label>
+          <button class="btn" id="btnLoadUrl">تحميل القائمة</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpane" id="t3">
+      <label>الصق محتوى ملف M3U هنا</label>
+      <textarea id="m3uText" placeholder="#EXTM3U&#10;#EXTINF:-1 tvg-logo=&quot;...&quot;,Channel Name&#10;https://.../playlist.m3u8"></textarea>
+      <div style="margin-top:10px"><button class="btn" id="btnParseText">تحليل وإضافة القنوات</button></div>
+    </div>
+
+    <div class="tabpane" id="t4">
+      <div class="row">
+        <div class="field"><label>اسم القناة</label><input type="text" id="manualName" placeholder="اسم القناة"></div>
+        <div class="field" style="flex:2"><label>رابط البث (HLS / MP4 / أي رابط)</label><input type="url" id="manualUrl" placeholder="https://.../live/stream.m3u8"></div>
+      </div>
+      <div style="margin-top:10px"><button class="btn" id="btnAddManual">➕ إضافة القناة</button></div>
+    </div>
+  </div>
+
+  <!-- ================= CHANNELS ================= -->
+  <div class="panel">
+    <h2>قائمة القنوات</h2>
+    <div class="ch-tools">
+      <input type="text" id="chSearch" placeholder="🔍 ابحث عن قناة...">
+      <span class="ch-count" id="chCount">0 قناة</span>
+      <button class="btn gray" id="btnClearCh">مسح الكل</button>
+    </div>
+    <div class="ch-list" id="chList">
+      <div class="empty">لا توجد قنوات بعد — أضف ملف M3U من الأعلى</div>
+    </div>
+  </div>
+
+  <!-- ================= SCHEDULER ================= -->
+  <div class="panel">
+    <h2>جدولة تسجيل البث المباشر</h2>
+    <div class="row">
+      <div class="field" style="flex:2"><label>القناة</label><select id="schedCh"><option value="-1">— اختر قناة —</option></select></div>
+      <div class="field"><label>من تاريخ ووقت</label><input type="datetime-local" id="schedFrom"></div>
+      <div class="field"><label>إلى تاريخ ووقت</label><input type="datetime-local" id="schedTo"></div>
+      <div class="field" style="justify-content:flex-end;min-width:120px">
+        <label>&nbsp;</label><button class="btn" id="btnAddSched">⏰ إضافة جدولة</button>
+      </div>
+    </div>
+    <div class="sched-list" id="schedList"><div class="empty">لا توجد جداول بعد</div></div>
+  </div>
+
+  <!-- ================= MEDIA ================= -->
+  <div class="panel">
+    <h2>التسجيلات والصور الملتقطة</h2>
+    <div class="media-grid" id="mediaGrid"><div class="empty" style="grid-column:1/-1">لا توجد تسجيلات أو صور بعد</div></div>
+  </div>
+
+</div>
+
+<footer>
+  صُمم وطُوّر بواسطة <b>عباس الزبيدي</b> — جميع الحقوق محفوظة © 2026<br>
+  <small>يُنصح بتشغيل الصفحة عبر خادم محلي (مثل Live Server) للحصول على أفضل أداء مع ملفات M3U الخارجية</small>
+</footer>
+<script src="js/app.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+</script>
+</body>
+</html>
